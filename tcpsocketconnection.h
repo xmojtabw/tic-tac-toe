@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
-
+#include <QThread>
 
 #include "message.h"
 #include "servermessagehandeler.h"
@@ -37,7 +37,6 @@ private slots:
 
     //only for server
     void checkForNewMessages();
-    void emitMessages();
 //    void readTimeout();
 
 signals:

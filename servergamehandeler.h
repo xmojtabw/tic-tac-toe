@@ -9,11 +9,20 @@
 #include <QTimer>
 #include <QIcon>
 #include <QPalette>
-#include "player.h"
 
+#include <thread>
+#include "player.h"
 #include "message.h"
 #include "serverbroadsetpage.h"
 #include "tcpsocketconnection.h"
+
+typedef struct Event
+{
+    Event(Message m,TcpSocketConnection *c):
+        msg(m),con(c){}
+    Message msg;
+    TcpSocketConnection *con;
+}Event;
 
 namespace Ui {
 class ServerGameHandeler;
@@ -51,6 +60,8 @@ private:
     QWidget* last_page;
     QIcon ic;
     QIcon admin_ic;
+    QIcon cross;
+    QIcon circle;
     enum privacy_mode{public_,private_,close};
     privacy_mode privacy;
 
@@ -58,7 +69,6 @@ private:
     QList<TcpSocketConnection *> waiters;
     QTcpServer* tcp_server;
     QList<TcpSocketConnection *>members;
-
     qint16 server_port;
 
 

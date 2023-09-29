@@ -93,6 +93,8 @@ void Client::on_LocalhostButton_clicked()
 
 void Client::on_nextButton_clicked()
 {
+    qDebug()<<tcp_client->state();
+
     QString ip = ui->IPLineEdit->text();
     int port = ui->PortSpinBox->value();
     tcp_client->connectToHost(QHostAddress(ip),port);

@@ -20,12 +20,6 @@ TcpSocketConnection::TcpSocketConnection
        connect(readTimer,&QTimer::timeout,
                this,&TcpSocketConnection::checkForNewMessages);
        readTimer->start();
-
-       emitTimer = new QTimer();
-       emitTimer->setInterval(50);
-       emitTimer->setSingleShot(true);
-       connect(emitTimer,&QTimer::timeout,
-               this,&TcpSocketConnection::emitMessages);
 //        qDebug()<<"tsc created";
 
 
@@ -99,20 +93,18 @@ void TcpSocketConnection::dequeue_drafts(Message msg)
 void TcpSocketConnection::checkForNewMessages()
 {
     recieved_messages.append(smh->getMessages());
-    if(recieved_messages.size())
+    while(recieved_messages.size())
     {
-        emitMessages();
+        qDebug()<<recieved_messages.size();
+        Message pending_emit=recieved_messages.first();
+        recieved_messages.pop_front();
+        emit newEvent(pending_emit,this);
+        if(!recieved_messages.size())break;
+        QThread::msleep(50);//for not emit fastly
+
     }
 }
 
-void TcpSocketConnection::emitMessages()
-{
-    qDebug()<<"recieved size is "<<recieved_messages.size();
-    Message pending_emit=recieved_messages.first();
-    recieved_messages.pop_front();
-    emit newEvent(pending_emit,this);
-    if(recieved_messages.size())emitTimer->start();//more than one messages recieved
-}
 
 void TcpSocketConnection::setName(QString n,bool cli)
 {cli?clientName=n:serverName = n;}

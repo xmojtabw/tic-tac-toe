@@ -43,7 +43,7 @@ void serverMessageHandeler::reader()
                     received_data = received_data.mid(size + messageSize);
 
                     // Process the messageData here
-//                    qDebug()<<"message data :"<<messageData;
+                    qDebug()<<"message data :"<<messageData;
         //            qDebug()<<"rec data"<<received_data;
 
                     //lock

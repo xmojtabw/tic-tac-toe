@@ -8,6 +8,8 @@ ServerGameHandeler::ServerGameHandeler
     last_page(parent),
     ic(":/icons/person.png"),
     admin_ic(":/icons/admin.png"),
+    circle(":/pics/circle.png"),
+    cross(":/pics/cross.png"),
     privacy(public_),
     server_port(port)
 {
@@ -87,6 +89,39 @@ void ServerGameHandeler::startNewGame()
 
 char ServerGameHandeler::playerSelected(int place)
 {
+    if(move%2)
+    {
+        switch (place)
+        {
+        case 0:ui->a1->setIcon(cross);break;
+        case 1:ui->a2->setIcon(cross);break;
+        case 2:ui->a3->setIcon(cross);break;
+        case 3:ui->b1->setIcon(cross);break;
+        case 4:ui->b2->setIcon(cross);break;
+        case 5:ui->b3->setIcon(cross);break;
+        case 6:ui->c1->setIcon(cross);break;
+        case 7:ui->c2->setIcon(cross);break;
+        case 8:ui->c3->setIcon(cross);break;
+        default:break;
+        }
+    }
+    else
+    {
+        switch (place)
+        {
+        case 0:ui->a1->setIcon(circle);break;
+        case 1:ui->a2->setIcon(circle);break;
+        case 2:ui->a3->setIcon(circle);break;
+        case 3:ui->b1->setIcon(circle);break;
+        case 4:ui->b2->setIcon(circle);break;
+        case 5:ui->b3->setIcon(circle);break;
+        case 6:ui->c1->setIcon(circle);break;
+        case 7:ui->c2->setIcon(circle);break;
+        case 8:ui->c3->setIcon(circle);break;
+        default:break;
+        }
+    }
+
     int row = place/3;
     int col = place%3;
     char current_move;
@@ -297,13 +332,22 @@ void ServerGameHandeler::handelNewEvent(Message msg, TcpSocketConnection *con)
             if(s=='g')
             {
                 player_one.increse('w');
+                player_two.increse('l');
             }
+            else
+            {
+                player_one.increse('l');
+                player_two.increse('w');
+            }
+
 
         }
         else if(s=='d')
         {
             qDebug()<<"we have draw";
             sendToAllMembers("draw","");
+            player_one.increse('d');
+            player_two.increse('d');
         }
         //else // 'n' nothing just continue
 
