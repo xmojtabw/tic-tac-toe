@@ -1,0 +1,18 @@
+client :
+    join:password
+    play:place
+
+
+
+
+server :
+    joinconfirm
+    initmember
+    start
+    play(only forward)
+    wins
+    draw
+
+
+both :
+    normalmessage

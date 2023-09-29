@@ -1,0 +1,24 @@
+<!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+     <file>icons/refresh.png</file>
+     <file>icons/setting.png</file>
+     <file>icons/send.png</file>
+     <file>icons/back.png</file>
+     <file>icons/check.png</file>
+     <file>icons/clean.png</file>
+     <file>icons/clean2.png</file>
+     <file>icons/person.png</file>
+     <file>icons/admin.png</file>
+     <file>pics/cross.png</file>
+     <file>pics/circle.png</file>
+     <file>pics/boardbackground.png</file>
+     <file>pics/boardbackground2.png</file>
+     <file>pics/rsz_boardbackground.png</file>
+     <file>pics/rsz_boardbackground2.png</file>
+     <file>pics/back1.png</file>
+     <file>pics/back2.png</file>
+     <file>pics/back3.png</file>
+     <file>pics/black.png</file>
+
+ </qresource>
+ </RCC>
