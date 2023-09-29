@@ -45,6 +45,10 @@ private slots:
 
     void on_c3_clicked();
 
+    void on_resignButton_clicked();
+
+    void on_rematchButton_clicked();
+
 private:
     Ui::ClientGamePage *ui;
     TcpSocketConnection *con;
@@ -54,6 +58,7 @@ private:
     QIcon cross;
     QString username;
     int move;
+    bool rematch;
     bool buttonsLock;
     bool disablebuttons[9];
 };

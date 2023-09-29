@@ -1,6 +1,8 @@
 client :
     join:password
     play:place
+    rematch
+    resign
 
 
 

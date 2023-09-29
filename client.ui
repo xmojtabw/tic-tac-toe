@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>205</width>
-    <height>295</height>
+    <width>204</width>
+    <height>344</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,7 +42,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>manual</string>
+              <string>log in</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
@@ -56,6 +56,9 @@
            <item>
             <widget class="QLineEdit" name="usernameLineedit">
              <property name="text">
+              <string/>
+             </property>
+             <property name="placeholderText">
               <string>username</string>
              </property>
             </widget>
@@ -67,6 +70,9 @@
            <item>
             <widget class="QLineEdit" name="passwordLineedit">
              <property name="text">
+              <string/>
+             </property>
+             <property name="placeholderText">
               <string>password</string>
              </property>
             </widget>
@@ -118,10 +124,13 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string> or enter an IP </string>
+              <string/>
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
+             </property>
+             <property name="placeholderText">
+              <string>or enter an IP</string>
              </property>
             </widget>
            </item>
@@ -170,6 +179,17 @@
           </layout>
          </item>
          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QPushButton" name="signupButton">
+             <property name="text">
+              <string>signup</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
            <item>
             <widget class="QPushButton" name="nextButton">
@@ -180,7 +200,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>next</string>
+              <string>sign in</string>
              </property>
             </widget>
            </item>

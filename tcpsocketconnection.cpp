@@ -20,7 +20,7 @@ TcpSocketConnection::TcpSocketConnection
        connect(readTimer,&QTimer::timeout,
                this,&TcpSocketConnection::checkForNewMessages);
        readTimer->start();
-//        qDebug()<<"tsc created";
+
 
 
    }
@@ -49,11 +49,6 @@ TcpSocketConnection::TcpSocketConnection
     connect(send_timeout,&QTimer::timeout,
             this,&TcpSocketConnection::sendTimeout);
 
-//    read_timeout = new QTimer();
-//    read_timeout->setSingleShot(true);
-//    read_timeout->setInterval(300);
-//    connect(read_timeout,&QTimer::timeout,
-//            this,&TcpSocketConnection::readTimeout);
 }
 
 void TcpSocketConnection::sendMessage(QString t, QString m,QString s)
@@ -90,6 +85,15 @@ void TcpSocketConnection::dequeue_drafts(Message msg)
     connection->write(framedmessage);
 }
 
+TcpSocketConnection::~TcpSocketConnection()
+{
+//    if(is_server)
+//        delete smh;
+//    connection->deleteLater();
+//    send_timeout->deleteLater();
+//    readTimer->deleteLater();
+}
+
 void TcpSocketConnection::checkForNewMessages()
 {
     recieved_messages.append(smh->getMessages());
@@ -117,18 +121,10 @@ quint16 TcpSocketConnection::getPort(bool cli)
 
 void TcpSocketConnection::handleNewMessages()
 {
-//    if(read_timeout->isActive())
-//    {
-//        qDebug()<<"still reading the last message...";
-//    }
-//    read_timeout->start();
-
 
 
     {
         QByteArray buffer=connection->readAll();
-    //    qDebug()<<"buffer :"<<buffer;
-//        qDebug()<<"size is :"<<sizeof(quint32);
         //----------------------//
         QByteArray received_data;
         received_data.append(buffer);
@@ -169,14 +165,13 @@ void TcpSocketConnection::handleDisconnect()
         smh->stopThread();
     }
     qDebug()<<"disconnect";
-    //emit signal
+    emit newEvent(Message("",clientName,"disconnected"),this);
 
 }
 
 void TcpSocketConnection::sendConfirm(qint64 Bytes)
 {
 
-//    qDebug()<<"tcp sent " <<Bytes<<" bytes"<<getName();
     send_timeout->stop();
     if(draft_messages.size())
     {
@@ -198,7 +193,3 @@ void TcpSocketConnection::sendTimeout()
     qDebug()<<"send time out";
 }
 
-//void TcpSocketConnection::readTimeout()
-//{
-//    qDebug()<<"read time out";
-//}

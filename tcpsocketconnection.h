@@ -18,7 +18,7 @@ public:
     void sendMessage(QString type, QString Message="",QString sender="n");
     void dequeue_drafts(Message msg);
     void disconnectFromServer();
-
+    ~TcpSocketConnection();
 
     //----------------//
     //for getting(or setting) server details: set the client boolean to false
@@ -37,7 +37,7 @@ private slots:
 
     //only for server
     void checkForNewMessages();
-//    void readTimeout();
+
 
 signals:
     void newEvent(Message msg,TcpSocketConnection * connection);
@@ -71,7 +71,7 @@ private:
     //only for server
     QList<Message> recieved_messages;
     QTimer* readTimer;
-    QTimer* emitTimer;
+
 
 
 

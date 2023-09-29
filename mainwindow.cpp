@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(secondTimer,&QTimer::timeout,
             this,&MainWindow::increase);
 
-
 }
 
 MainWindow::~MainWindow()
@@ -46,14 +45,11 @@ void MainWindow::on_ServerJoinButton_clicked()
 
 void MainWindow::getTimeDate(QString date, QString time)
 {
-    qDebug()<<time<<date;
+
     ui->dateLabel->setText(date);
     QString hour = QString(time.toStdString().substr(0,2).c_str());
     QString min = QString(time.toStdString().substr(3,2).c_str());
     QString sec = QString(time.toStdString().substr(6,2).c_str());
-    qDebug()<<hour;
-    qDebug()<<min;
-    qDebug()<<sec;
 
 
     ui->hour->display(hour);
@@ -92,4 +88,10 @@ void MainWindow::increase()
         ui->second->display(sec+1);
     }
 }
+
+
+
+
+
+
 

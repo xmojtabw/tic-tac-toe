@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>316</width>
-    <height>166</height>
+    <width>278</width>
+    <height>152</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>LANCh</string>
+   <string>tic-tac-toe</string>
   </property>
   <property name="inputMethodHints">
    <set>Qt::ImhNone</set>
@@ -118,7 +118,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>join as a server</string>
+         <string>I'm server</string>
         </property>
        </widget>
       </item>
@@ -131,7 +131,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>join as a client</string>
+         <string>I'm player</string>
         </property>
        </widget>
       </item>

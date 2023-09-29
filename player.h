@@ -1,13 +1,20 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include <QWidget>
+#include <iostream>
+#include <functional>
+#include <ctime>
+#include <cstdlib>
+#include <fstream>
+
 
 class Player
 {
 public:
     Player(QString usernsme="not defined",QString password="not defined");
-//    Player(const Player& other);
-//    Player& operator=(const Player& other);
+    bool operator==(const Player& other);
+    Player(const Player& other);
+    Player& operator=(const Player &other);
     int getTotalplayes()const;
     int getWins()const;
     int getDraws()const;
@@ -17,13 +24,13 @@ public:
     //l = lose
     //w = win
 
-
+    bool auth(QString username,QString pass="")const;
     const QString &getUsername() const;
 
 
 private:
     QString username;
-    QString password;
+    size_t password;
     int wins;
     int loses;
     int draw;

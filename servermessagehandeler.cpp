@@ -13,6 +13,7 @@ serverMessageHandeler::~serverMessageHandeler()
     if(!stop)
     {
         stop=true;
+        qDebug()<<"before join";
         readThread.join();
         qDebug()<<"thread joins";
     }

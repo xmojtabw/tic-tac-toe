@@ -2,10 +2,9 @@
 #define CLIENT_H
 
 #include <QWidget>
-#include <QUdpSocket>
 #include <QTcpSocket>
 #include <QTimer>
-
+#include <QMessageBox>
 #include "clientgamepage.h"
 #include "lans.h"
 #include "message.h"
@@ -23,6 +22,7 @@ class Client : public QWidget
 
 public:
     Client(QWidget *parent = nullptr,QString usr_name="");
+    void connectToHost();
     ~Client();
 
 private slots:
@@ -41,12 +41,15 @@ private slots:
 
     void on_nextButton_clicked();
 
+    void on_signupButton_clicked();
+
 private:
     Ui::Client *ui;
     QWidget * last_page;
     Lans * lan_page;
     ClientGamePage * chat_page;
 
+    bool is_newplayer;
     QTcpSocket * tcp_client;
     TcpSocketConnection * tcp_connection;
     QString username;

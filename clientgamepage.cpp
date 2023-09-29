@@ -10,7 +10,7 @@ ClientGamePage::ClientGamePage
     admin_ic(":/icons/admin.png"),
     circle(":/pics/circle.png"),
     cross(":/pics/cross.png"),
-    username(un),
+    username(un),rematch(false),
     buttonsLock(true)
 {
     ui->setupUi(this);
@@ -38,16 +38,40 @@ ClientGamePage::ClientGamePage
     ui->boardWidget->setAutoFillBackground(true);
     ui->boardWidget->setPalette(palette);
 
-}
 
+    QPixmap blackImage(":/pics/black.png");
+    QPalette paletteBlack;
+    paletteBlack.setBrush(QPalette::Window, blackImage);
+    ui->yourWinsLcd->setAutoFillBackground(true);
+    ui->yourWinsLcd->setPalette(paletteBlack);
+    ui->opWinsLcd->setAutoFillBackground(true);
+    ui->opWinsLcd->setPalette(paletteBlack);
+    ui->yourWinsLcd->display("00");
+    ui->opWinsLcd->display("00");
+
+    ui->yournameLabel->setText(username);
+    ui->opponentname->setText("unknown");
+
+
+
+}
 void ClientGamePage::clearTheBoard()
 {
     move=0;
+    rematch = false;
     for(int i=0;i<9;i++){
         disablebuttons[i]=false;
     }
+    ui->a1->setIcon(QPixmap(0,0));
+    ui->a2->setIcon(QPixmap(0,0));
+    ui->a3->setIcon(QPixmap(0,0));
+    ui->b1->setIcon(QPixmap(0,0));
+    ui->b2->setIcon(QPixmap(0,0));
+    ui->b3->setIcon(QPixmap(0,0));
+    ui->c1->setIcon(QPixmap(0,0));
+    ui->c2->setIcon(QPixmap(0,0));
+    ui->c3->setIcon(QPixmap(0,0));
 }
-
 void ClientGamePage::playerMoves(int place,bool i_select)
 {
     qDebug()<<"palce : "<<place<<i_select;
@@ -92,11 +116,14 @@ void ClientGamePage::playerMoves(int place,bool i_select)
             }
         }
         if(i_select){
+            //this player has selected
+            ui->yournameLabel->setText(ui->yournameLabel->text());
             con->sendMessage("play",QString::number(place));
             buttonsLock = true;
         }
         else
         {
+
             buttonsLock = false;
         }
         disablebuttons[place]=true;
@@ -105,6 +132,7 @@ void ClientGamePage::playerMoves(int place,bool i_select)
 }
 ClientGamePage::~ClientGamePage()
 {
+    con->sendMessage("quit");
     delete ui;
 }
 void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection)
@@ -131,6 +159,7 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
         member_item->setTextAlignment(Qt::AlignLeft);
         member_item->setIcon(ic);
 
+
         ui->membersList->addItem(member_item);
     }
     else if(msg.get_type()=="start")
@@ -138,12 +167,16 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
         clearTheBoard();
         if(msg.get_message()==username)
         {
-            buttonsLock=false;
             //your turn to play
+            buttonsLock=false;
+            ui->yournameLabel->setText(ui->yournameLabel->text()+" <<<");
+
         }
         else
         {
             //other player turn
+            ui->opponentname->setText(msg.get_message());
+            ui->yournameLabel->setText(ui->yournameLabel->text());
             buttonsLock=true;
         }
     }
@@ -151,18 +184,86 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
     {
         qDebug()<<" oppent played :" <<msg.get_sender_name()<<msg.get_message();
         playerMoves(msg.get_message().toInt(),false);
+        ui->yournameLabel->setText(ui->yournameLabel->text()+" <<<");
     }
     else if(msg.get_type()=="wins")
     {
-        qDebug()<<msg.get_message()<<" wins!!!";
+
         buttonsLock= true;
         move=9;
+        QListWidgetItem * message_item =
+                new QListWidgetItem(">>> "+msg.get_message()+" won <<<");
+        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+        message_item->setTextAlignment(Qt::AlignCenter);
+        ui->chatList->addItem(message_item);
+        if(username==msg.get_message())
+        {
+            ui->yourWinsLcd->display(ui->yourWinsLcd->value()+1);
+        }
+        else
+        {
+            ui->opWinsLcd->display(ui->opWinsLcd->value()+1);
+        }
     }
     else if(msg.get_type()=="draw")
     {
+        QListWidgetItem * message_item =
+                new QListWidgetItem(">>> draw <<<");
+        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+        message_item->setTextAlignment(Qt::AlignCenter);
+        ui->chatList->addItem(message_item);
         buttonsLock = true;
         move=9;
-        qDebug()<<"draw";
+    }
+    else if(msg.get_type()=="quit")
+    {
+        qDebug()<<"in quit";
+        QListWidgetItem * message_item =
+                new QListWidgetItem(">>> "+msg.get_sender_name()
+                                    +" left <<<");
+        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+        message_item->setTextAlignment(Qt::AlignCenter);
+        ui->chatList->addItem(message_item);
+        int i=0;
+        while(true)
+        {
+            QListWidgetItem * item=ui->membersList->item(i);
+            if(item==nullptr)break;
+            qDebug()<<item->text();
+            if(item->text().contains(msg.get_sender_name()))
+            {
+                delete item;
+                item=nullptr;
+                break;
+            }
+            i++;
+        }
+        buttonsLock = true;
+        move=9;
+    }
+    else if(msg.get_type()=="disconnected")
+    {
+        QListWidgetItem * message_item =
+                new QListWidgetItem(">>> server left <<<");
+        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+        message_item->setTextAlignment(Qt::AlignCenter);
+        ui->chatList->addItem(message_item);
+        int i=0;
+        while(true)
+        {
+            QListWidgetItem * item=ui->membersList->item(i);
+            if(item==nullptr)break;
+            if(item->text().contains("server"))
+            {
+                ui->membersList->removeItemWidget(item);
+                break;
+            }
+        }
+        buttonsLock = true;
+        move=9;
+    }
+    else {
+        qDebug()<<"wrong message in clinet";
     }
 }
 void ClientGamePage::on_sendButton_clicked()
@@ -178,7 +279,7 @@ void ClientGamePage::on_sendButton_clicked()
 }
 void ClientGamePage::on_backButton_clicked()
 {
-    //not compeleted
+    this->~ClientGamePage();
 }
 void ClientGamePage::on_a1_clicked()
 {
@@ -216,5 +317,25 @@ void ClientGamePage::on_c2_clicked()
 void ClientGamePage::on_c3_clicked()
 {
     playerMoves(8,true);
+}
+void ClientGamePage::on_resignButton_clicked()
+{
+    if(move&&move!=9)
+    {
+        buttonsLock=true;
+        con->sendMessage("resign");
+        move=0;
+    }
+}
+void ClientGamePage::on_rematchButton_clicked()
+{
+    if(move&&!rematch)
+    {
+        con->sendMessage("rematch");
+    }
+    else
+    {
+       rematch = true;
+    }
 }
 

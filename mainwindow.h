@@ -24,8 +24,7 @@ private slots:
     void on_ServerJoinButton_clicked();
     void getTimeDate(QString time, QString date);
     void on_ClientJoinButton_clicked();
-    void increase();
-
+    void increase();    
 
 private:
     Ui::MainWindow *ui;
@@ -33,5 +32,6 @@ private:
     Client* client_page;
     APIHandler api;
     QTimer* secondTimer;
+
 };
 #endif // MAINWINDOW_H

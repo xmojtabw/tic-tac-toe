@@ -8,9 +8,8 @@ ServerGameHandeler::ServerGameHandeler
     last_page(parent),
     ic(":/icons/person.png"),
     admin_ic(":/icons/admin.png"),
-    circle(":/pics/circle.png"),
     cross(":/pics/cross.png"),
-    privacy(public_),
+    circle(":/pics/circle.png"),
     server_port(port)
 {
     ui->setupUi(this);
@@ -46,6 +45,10 @@ ServerGameHandeler::ServerGameHandeler
     palette.setBrush(QPalette::Window, backgroundImage);
     ui->boardWidget->setAutoFillBackground(true);
     ui->boardWidget->setPalette(palette);
+
+    //--------------------------//
+    connect(&db,&DataBase::notify,
+            this,&ServerGameHandeler::authNewConnections);
 }
 
 void ServerGameHandeler::sendToAllMembers(QString t,QString msg,QString s)
@@ -73,7 +76,6 @@ void ServerGameHandeler::shareNewMember(TcpSocketConnection * new_member)
                      new_member->getName() +':'+new_member->getIp());
 
 }
-
 void ServerGameHandeler::startNewGame()
 {
     clearTheBoard();
@@ -86,7 +88,6 @@ void ServerGameHandeler::startNewGame()
         sendToAllMembers("start",player_two.getUsername());
     }
 }
-
 char ServerGameHandeler::playerSelected(int place)
 {
     if(move%2)
@@ -185,7 +186,6 @@ char ServerGameHandeler::playerSelected(int place)
 
 
 }
-
 void ServerGameHandeler::clearTheBoard()
 {
     move = 0;
@@ -193,6 +193,16 @@ void ServerGameHandeler::clearTheBoard()
     {
         for(int j=0;j<3;j++)board[i][j]='n';
     }
+    rematch[0]=rematch[1]=false;
+    ui->a1->setIcon(QPixmap(0,0));
+    ui->a2->setIcon(QPixmap(0,0));
+    ui->a3->setIcon(QPixmap(0,0));
+    ui->b1->setIcon(QPixmap(0,0));
+    ui->b2->setIcon(QPixmap(0,0));
+    ui->b3->setIcon(QPixmap(0,0));
+    ui->c1->setIcon(QPixmap(0,0));
+    ui->c2->setIcon(QPixmap(0,0));
+    ui->c3->setIcon(QPixmap(0,0));
 }
 
 
@@ -203,26 +213,11 @@ void ServerGameHandeler::clearTheBoard()
 
 ServerGameHandeler::~ServerGameHandeler()
 {
+
     delete ui;
 
-}
-
-
-
-
-
-
-void ServerGameHandeler::on_changeModeButton_clicked()
-{
-    //not compilited
-    if(privacy==public_)
-    {
-
-    }
 
 }
-
-
 void ServerGameHandeler::on_SendButton_clicked()
 {
     QString sending_message = ui->chatTextEdit->toPlainText();
@@ -234,14 +229,11 @@ void ServerGameHandeler::on_SendButton_clicked()
     //----send it to TCP socket;
     sendToAllMembers("normalmessage",sending_message);
 }
-
-
 void ServerGameHandeler::on_BackButton_clicked()
 {
     last_page->show();
     this->~ServerGameHandeler();
 }
-
 void ServerGameHandeler::handelNewConnection()
 {
     qDebug()<<"before creating tsc";
@@ -255,16 +247,15 @@ void ServerGameHandeler::handelNewConnection()
 
 
 }
-
 void ServerGameHandeler::handelNewEvent(Message msg, TcpSocketConnection *con)
 {
     if(msg.get_type()=="join")
     {
 
-        if(privacy==public_)
 
-        {
-            con->setName(msg.get_sender_name());
+
+        {            
+
             //need to add more graphic
             QListWidgetItem * member_item =new QListWidgetItem(
                         con->getName()
@@ -277,33 +268,37 @@ void ServerGameHandeler::handelNewEvent(Message msg, TcpSocketConnection *con)
             member_item->setIcon(ic);
 
             ui->listOfMembers->addItem(member_item);
-            con->sendMessage("joinconfirm");
             members.append(con);
             waiters.removeOne(con);
             shareNewMember(con);
-            if(members.size()==1)
+            if(msg.get_message()!="")//its new player
             {
-                player_one = Player(msg.get_sender_name(),msg.get_message());
+                if(members.size()==1)
+                {
+                    player_one = Player(msg.get_sender_name(),msg.get_message());
+                    db.addPlayer(player_one);
+                }
+                if(members.size()==2)
+                {
+
+                    player_two = Player(msg.get_sender_name(),msg.get_message());
+                    db.addPlayer(player_one);
+                    startNewGame();
+                }
             }
-            if(members.size()==2)
-            {
-                player_two = Player(msg.get_sender_name(),msg.get_message());
-                startNewGame();
-            }
-
-        }
-        else if(privacy==private_)
-        {
-            waiters.push_front(con);
-            //not compilited
-        }
-        else
-        {
-            //ignore , nothing will happen
-        }
 
 
-        //add perrmissn later
+        }
+    }
+    else if(msg.get_type()=="signin")
+    {
+        con->setName(msg.get_sender_name());
+        db.find(msg.get_sender_name(),msg.get_message());
+    }
+    else if(msg.get_type()=="signup")
+    {
+        con->setName(msg.get_sender_name());
+        db.find(msg.get_sender_name());
     }
     else if(msg.get_type()=="normalmessage")
     {
@@ -356,10 +351,103 @@ void ServerGameHandeler::handelNewEvent(Message msg, TcpSocketConnection *con)
 
 
     }
+    else if(msg.get_type()=="resign")
+    {
+        if(player_one.getUsername()==msg.get_sender_name())
+        {
+            sendToAllMembers("wins",player_two.getUsername());
+        }
+        else
+        {
+            sendToAllMembers("wins",player_one.getUsername());
+        }
+
+    }
+    else if(msg.get_type()=="rematch")
+    {
+        if(msg.get_sender_name()==player_one.getUsername())rematch[0]=true;
+        if(msg.get_sender_name()==player_two.getUsername())rematch[1]=true;
+        if(rematch[0]&&rematch[1])
+        {
+            startNewGame();
+        }
+    }
+    else if(msg.get_type()=="disconnected")
+    {
+        qDebug()<<"in dicon";
+        qDebug()<<msg.get_sender_name();
+
+        if(!members.contains(con))return; // not a member
+        qDebug()<<"should display";
+        sendToAllMembers("quit","",msg.get_sender_name());
+        QListWidgetItem * message_item =
+                new QListWidgetItem(">>> "+msg.get_sender_name()
+                                    +" left <<<");
+
+        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+        message_item->setTextAlignment(Qt::AlignCenter);
+        ui->chatList->addItem(message_item);
+        qDebug()<<"should3 display";
+        int i=0;
+        while(true)
+        {
+            QListWidgetItem * item=ui->listOfMembers->item(i);
+            if(item==nullptr)break;
+            if(item->text().contains(msg.get_sender_name()))
+            {
+                ui->listOfMembers->removeItemWidget(item);
+                delete item;
+                item=nullptr;
+                break;
+            }
+            i++;
+        }
+        members.removeOne(con);
+        qDebug()<<members.size();
+    }
     else
     {
         qDebug()<<"unknown message";
     }
+}
+
+void ServerGameHandeler::authNewConnections(int i,QString username)
+{
+
+    qDebug()<<"in auth handle"<<i<<username;
+        foreach(const auto& con,waiters )
+        {
+            if(con->getName()==username)
+            {
+                if(i==-1)
+                {
+                    con->sendMessage("wrongauth");//wrong pass or username
+                }
+                else if(i ==-2)
+                {
+                    con->sendMessage("authconfirm");//new player
+                }
+                else
+                {
+                    con->sendMessage("authconfirm");//user auth was correct
+                    //and not a new user
+                    if(members.size()==0)
+                    {
+                        player_one= db[i];
+                    }
+                    else if(members.size()==1)
+                    {
+                        player_two= db[i];
+                    }
+                }
+
+                break;
+            }
+
+        }
+
+
+
 }
 
 

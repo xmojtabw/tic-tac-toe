@@ -15,14 +15,7 @@
 #include "message.h"
 #include "serverbroadsetpage.h"
 #include "tcpsocketconnection.h"
-
-typedef struct Event
-{
-    Event(Message m,TcpSocketConnection *c):
-        msg(m),con(c){}
-    Message msg;
-    TcpSocketConnection *con;
-}Event;
+#include "database.h"
 
 namespace Ui {
 class ServerGameHandeler;
@@ -46,8 +39,8 @@ private slots:
 
      void handelNewConnection();
      void handelNewEvent(Message msg , TcpSocketConnection * connection);
+     void authNewConnections(int i,QString username);
      //--------------------//
-     void on_changeModeButton_clicked();
 
      void on_SendButton_clicked();
 
@@ -62,8 +55,6 @@ private:
     QIcon admin_ic;
     QIcon cross;
     QIcon circle;
-    enum privacy_mode{public_,private_,close};
-    privacy_mode privacy;
 
     //members(clients) who are waiting for server confirmation
     QList<TcpSocketConnection *> waiters;
@@ -72,10 +63,12 @@ private:
     qint16 server_port;
 
 
+    DataBase db;
     //---------------//
     Player player_one;
     Player player_two;
     char board[3][3];
+    bool rematch[2];
     int move;
 
 };

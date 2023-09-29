@@ -13,6 +13,7 @@ SOURCES += \
     apihandler.cpp \
     client.cpp \
     clientgamepage.cpp \
+    database.cpp \
     lans.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -22,12 +23,14 @@ SOURCES += \
     serverbroadsetpage.cpp \
     servergamehandeler.cpp \
     servermessagehandeler.cpp \
+    signup.cpp \
     tcpsocketconnection.cpp
 
 HEADERS += \
     apihandler.h \
     client.h \
     clientgamepage.h \
+    database.h \
     lans.h \
     mainwindow.h \
     message.h \
@@ -36,6 +39,7 @@ HEADERS += \
     serverbroadsetpage.h \
     servergamehandeler.h \
     servermessagehandeler.h \
+    signup.h \
     tcpsocketconnection.h
 
 FORMS += \
@@ -45,7 +49,8 @@ FORMS += \
     mainwindow.ui \
     server.ui \
     serverbroadsetpage.ui \
-    servergamehandeler.ui
+    servergamehandeler.ui \
+    signup.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

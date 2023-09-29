@@ -19,6 +19,7 @@
      <file>pics/back2.png</file>
      <file>pics/back3.png</file>
      <file>pics/black.png</file>
+     <file>icons/white.png</file>
 
  </qresource>
  </RCC>
