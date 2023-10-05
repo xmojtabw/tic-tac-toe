@@ -57,6 +57,7 @@ ClientGamePage::ClientGamePage
 }
 void ClientGamePage::clearTheBoard()
 {
+
     move=0;
     rematch = false;
     for(int i=0;i<9;i++){
@@ -71,9 +72,11 @@ void ClientGamePage::clearTheBoard()
     ui->c1->setIcon(QPixmap(0,0));
     ui->c2->setIcon(QPixmap(0,0));
     ui->c3->setIcon(QPixmap(0,0));
+    ui->yournameLabel->setText(username);
 }
 void ClientGamePage::playerMoves(int place,bool i_select)
 {
+    ui->yournameLabel->setText(username);
     qDebug()<<"palce : "<<place<<i_select;
     if(i_select&&buttonsLock)
     {
@@ -155,6 +158,7 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
                     msg.get_message());
 
         // need to change
+
         member_item->setBackground(QBrush(QColor(Qt::GlobalColor::cyan)));
         member_item->setTextAlignment(Qt::AlignLeft);
         member_item->setIcon(ic);
@@ -165,18 +169,18 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
     else if(msg.get_type()=="start")
     {
         clearTheBoard();
-        if(msg.get_message()==username)
+        if(msg.get_sender_name()==username)
         {
             //your turn to play
             buttonsLock=false;
-            ui->yournameLabel->setText(ui->yournameLabel->text()+" <<<");
-
+            ui->yournameLabel->setText(username+" <<<");
+            ui->opponentname->setText(msg.get_message());
         }
         else
         {
             //other player turn
-            ui->opponentname->setText(msg.get_message());
-            ui->yournameLabel->setText(ui->yournameLabel->text());
+            ui->yournameLabel->setText(username);
+            ui->opponentname->setText(msg.get_sender_name());
             buttonsLock=true;
         }
     }
@@ -184,7 +188,7 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
     {
         qDebug()<<" oppent played :" <<msg.get_sender_name()<<msg.get_message();
         playerMoves(msg.get_message().toInt(),false);
-        ui->yournameLabel->setText(ui->yournameLabel->text()+" <<<");
+        ui->yournameLabel->setText(username+" <<<");
     }
     else if(msg.get_type()=="wins")
     {
@@ -198,10 +202,12 @@ void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection
         ui->chatList->addItem(message_item);
         if(username==msg.get_message())
         {
+            //you are the winner
             ui->yourWinsLcd->display(ui->yourWinsLcd->value()+1);
         }
         else
         {
+            //your opponent is the winner
             ui->opWinsLcd->display(ui->opWinsLcd->value()+1);
         }
     }

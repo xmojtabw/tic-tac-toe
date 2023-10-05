@@ -80,11 +80,25 @@ void Client::on_LanButton_clicked()
 void Client::tcpConnected()
 {
     qDebug()<<"tcp connected";
+//    socket_thread = new QThread;
+
+//    auto p = tcp_client->parent();
+    qDebug()<<"before moving to thread";
+//    p->moveToThread(socket_thread);
+    qDebug()<<"parent moved";
+//    tcp_client->moveToThread(socket_thread);
+    qDebug()<<"tcp moved moved";
     tcp_connection = new TcpSocketConnection(tcp_client,false,username);
     connect(tcp_connection,&TcpSocketConnection::newEvent,
             this,&Client::tcpConfirmation);
+//    connect(socket_thread,&QThread::started,
+//            tcp_connection,&TcpSocketConnection::startManage);
+//    tcp_connection->moveToThread(socket_thread);
+
+//    socket_thread->start();
     if(is_newplayer)
     {
+        qDebug()<<"going to send auth";
         tcp_connection->sendMessage("signup",password);
     }
     else

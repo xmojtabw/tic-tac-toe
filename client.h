@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QThread>
 #include <QMessageBox>
 #include "clientgamepage.h"
 #include "lans.h"
@@ -54,6 +55,8 @@ private:
     TcpSocketConnection * tcp_connection;
     QString username;
     QString password;
+
+    QThread * socket_thread;
 };
 
 

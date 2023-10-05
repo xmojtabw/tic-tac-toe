@@ -13,8 +13,8 @@
 #include <thread>
 #include "player.h"
 #include "message.h"
-#include "serverbroadsetpage.h"
 #include "tcpsocketconnection.h"
+#include "tcpserver.h"
 #include "database.h"
 
 namespace Ui {
@@ -33,12 +33,13 @@ public:
      void startNewGame();
      char playerSelected(int place);
      void clearTheBoard();
+     void handelNewEvent();
 
     ~ServerGameHandeler();
 private slots:
 
-     void handelNewConnection();
-     void handelNewEvent(Message msg , TcpSocketConnection * connection);
+     void handelNewConnection(TcpSocketConnection * nc);
+
      void authNewConnections(int i,QString username);
      //--------------------//
 
@@ -58,10 +59,13 @@ private:
 
     //members(clients) who are waiting for server confirmation
     QList<TcpSocketConnection *> waiters;
-    QTcpServer* tcp_server;
+    TcpServer* tcp_server;
     QList<TcpSocketConnection *>members;
     qint16 server_port;
 
+    std::thread procces_thread;
+    bool alive=true;
+    QMutex waiters_lock;
 
     DataBase db;
     //---------------//

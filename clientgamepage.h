@@ -57,6 +57,7 @@ private:
     QIcon circle;
     QIcon cross;
     QString username;
+    bool first_time;
     int move;
     bool rematch;
     bool buttonsLock;

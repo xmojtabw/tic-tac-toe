@@ -21,9 +21,9 @@ ServerGameHandeler::ServerGameHandeler
 
 
     //--------------------//
-    tcp_server = new QTcpServer();
+    tcp_server = new TcpServer();
     tcp_server->listen(ip,server_port);
-    connect(tcp_server,&QTcpServer::newConnection,
+    connect(tcp_server,&TcpServer::TcpConnected,
             this,&ServerGameHandeler::handelNewConnection);
 
     //--------------------//
@@ -49,6 +49,8 @@ ServerGameHandeler::ServerGameHandeler
     //--------------------------//
     connect(&db,&DataBase::notify,
             this,&ServerGameHandeler::authNewConnections);
+
+    procces_thread = std::thread{&ServerGameHandeler::handelNewEvent,this};
 }
 
 void ServerGameHandeler::sendToAllMembers(QString t,QString msg,QString s)
@@ -81,11 +83,13 @@ void ServerGameHandeler::startNewGame()
     clearTheBoard();
     if(player_one.getTotalplayes()%2)
     {
-        sendToAllMembers("start",player_one.getUsername());
+        sendToAllMembers("start",player_two.getUsername(),
+                         player_one.getUsername());
     }
     else
     {
-        sendToAllMembers("start",player_two.getUsername());
+        sendToAllMembers("start",player_one.getUsername()
+                         ,player_two.getUsername());
     }
 }
 char ServerGameHandeler::playerSelected(int place)
@@ -214,6 +218,7 @@ void ServerGameHandeler::clearTheBoard()
 ServerGameHandeler::~ServerGameHandeler()
 {
 
+    alive=false;
     delete ui;
 
 
@@ -234,183 +239,188 @@ void ServerGameHandeler::on_BackButton_clicked()
     last_page->show();
     this->~ServerGameHandeler();
 }
-void ServerGameHandeler::handelNewConnection()
+void ServerGameHandeler::handelNewConnection(TcpSocketConnection * nc)
 {
-    qDebug()<<"before creating tsc";
-    TcpSocketConnection *  nc =
-            new  TcpSocketConnection(tcp_server->nextPendingConnection()
-                                     ,true,"server");
+    waiters_lock.lock();
     waiters.append(nc);
-    connect(nc,&TcpSocketConnection::newEvent,
-            this,&ServerGameHandeler::handelNewEvent);
+    waiters_lock.unlock();
     qDebug() << "new connection";
-
-
 }
-void ServerGameHandeler::handelNewEvent(Message msg, TcpSocketConnection *con)
+void ServerGameHandeler::handelNewEvent()
 {
-    if(msg.get_type()=="join")
-    {
+while (alive) {
+    waiters_lock.lock();
+    QVector<TcpSocketConnection *> allSockets=members+waiters;
+    waiters_lock.unlock();
+    for (auto &con :allSockets ) {
+        QVector<Message> message_to_proccess=con->getMessages();
+        for(auto &msg: message_to_proccess)
+        {
 
-
-
-        {            
-
-            //need to add more graphic
-            QListWidgetItem * member_item =new QListWidgetItem(
-                        con->getName()
-                        +'\n'
-                        +con->getIp()
-                        +":"
-                        +QString::number(con->getPort()));
-            member_item->setBackground(QBrush(QColor(Qt::GlobalColor::cyan)));
-            member_item->setTextAlignment(Qt::AlignLeft);
-            member_item->setIcon(ic);
-
-            ui->listOfMembers->addItem(member_item);
-            members.append(con);
-            waiters.removeOne(con);
-            shareNewMember(con);
-            if(msg.get_message()!="")//its new player
+            if(msg.get_type()=="join")
             {
-                if(members.size()==1)
-                {
-                    player_one = Player(msg.get_sender_name(),msg.get_message());
-                    db.addPlayer(player_one);
-                }
-                if(members.size()==2)
+
+
+
                 {
 
-                    player_two = Player(msg.get_sender_name(),msg.get_message());
-                    db.addPlayer(player_one);
+                    //need to add more graphic
+                    QListWidgetItem * member_item =new QListWidgetItem(
+                                con->getName()
+                                +'\n'
+                                +con->getIp()
+                                +":"
+                                +QString::number(con->getPort()));
+                    member_item->setBackground(QBrush(QColor(Qt::GlobalColor::cyan)));
+                    member_item->setTextAlignment(Qt::AlignLeft);
+                    member_item->setIcon(ic);
+
+                    ui->listOfMembers->addItem(member_item);
+                    members.push_back(con);
+                    waiters.removeOne(con);
+                    shareNewMember(con);
+                    if(msg.get_message()!="")//its new player
+                    {
+                        if(members.size()==1)
+                        {
+                            player_one = Player(msg.get_sender_name(),msg.get_message());
+                            db.addPlayer(player_one);
+                        }
+                        if(members.size()==2)
+                        {
+
+                            player_two = Player(msg.get_sender_name(),msg.get_message());
+                            db.addPlayer(player_two);
+                            startNewGame();
+                        }
+                    }
+
+
+                }
+            }
+            else if(msg.get_type()=="signin")
+            {
+                con->setName(msg.get_sender_name());
+                db.find(msg.get_sender_name(),msg.get_message());
+            }
+            else if(msg.get_type()=="signup")
+            {
+                con->setName(msg.get_sender_name());
+                db.find(msg.get_sender_name());
+            }
+            else if(msg.get_type()=="normalmessage")
+            {
+
+                sendToAllMembers("normalmessage",msg.get_message(),msg.get_sender_name());
+               //---------------------------//
+                QListWidgetItem * message_item =
+                        new QListWidgetItem(">>> "+msg.get_sender_name()+" :"
+                                            +'\n' +msg.get_message());
+                message_item->setBackground(QBrush(QColor(Qt::GlobalColor::yellow)));
+                message_item->setTextAlignment(Qt::AlignLeft);
+                message_item->setIcon(ic);
+                ui->chatList->addItem(message_item);
+
+            }
+            else if(msg.get_type()=="play")
+            {
+                int player_move=msg.get_message().toInt();
+                //forward the the message to members
+                sendToAllMembers("play",msg.get_message(),msg.get_sender_name());
+                char s=playerSelected(player_move);
+                if(s=='r'||s=='g')
+                {
+                    qDebug()<<s<< " :"<<msg.get_sender_name();
+                    sendToAllMembers("wins",msg.get_sender_name());
+                    if(s=='g')
+                    {
+                        player_one.increse('w');
+                        player_two.increse('l');
+                    }
+                    else
+                    {
+                        player_one.increse('l');
+                        player_two.increse('w');
+                    }
+
+
+                }
+                else if(s=='d')
+                {
+                    qDebug()<<"we have draw";
+                    sendToAllMembers("draw","");
+                    player_one.increse('d');
+                    player_two.increse('d');
+                }
+                //else // 'n' nothing just continue
+
+
+
+
+
+            }
+            else if(msg.get_type()=="resign")
+            {
+                if(player_one.getUsername()==msg.get_sender_name())
+                {
+                    sendToAllMembers("wins",player_two.getUsername());
+                }
+                else
+                {
+                    sendToAllMembers("wins",player_one.getUsername());
+                }
+
+            }
+            else if(msg.get_type()=="rematch")
+            {
+                if(msg.get_sender_name()==player_one.getUsername())rematch[0]=true;
+                if(msg.get_sender_name()==player_two.getUsername())rematch[1]=true;
+                if(rematch[0]&&rematch[1])
+                {
                     startNewGame();
                 }
             }
-
-
-        }
-    }
-    else if(msg.get_type()=="signin")
-    {
-        con->setName(msg.get_sender_name());
-        db.find(msg.get_sender_name(),msg.get_message());
-    }
-    else if(msg.get_type()=="signup")
-    {
-        con->setName(msg.get_sender_name());
-        db.find(msg.get_sender_name());
-    }
-    else if(msg.get_type()=="normalmessage")
-    {
-
-        sendToAllMembers("normalmessage",msg.get_message(),msg.get_sender_name());
-       //---------------------------//
-        QListWidgetItem * message_item =
-                new QListWidgetItem(">>> "+msg.get_sender_name()+" :"
-                                    +'\n' +msg.get_message());
-        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::yellow)));
-        message_item->setTextAlignment(Qt::AlignLeft);
-        message_item->setIcon(ic);
-        ui->chatList->addItem(message_item);
-
-    }
-    else if(msg.get_type()=="play")
-    {
-        int player_move=msg.get_message().toInt();
-        //forward the the message to members
-        sendToAllMembers("play",msg.get_message(),msg.get_sender_name());
-        char s=playerSelected(player_move);
-        if(s=='r'||s=='g')
-        {
-            qDebug()<<s<< " :"<<msg.get_sender_name();
-            sendToAllMembers("wins",msg.get_sender_name());
-            if(s=='g')
+            else if(msg.get_type()=="disconnected")
             {
-                player_one.increse('w');
-                player_two.increse('l');
+                qDebug()<<"in dicon";
+                qDebug()<<msg.get_sender_name();
+
+                if(!members.contains(con))return; // not a member
+                sendToAllMembers("quit","",msg.get_sender_name());
+                QListWidgetItem * message_item =
+                        new QListWidgetItem(">>> "+msg.get_sender_name()
+                                            +" left <<<");
+
+                message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
+                message_item->setTextAlignment(Qt::AlignCenter);
+                ui->chatList->addItem(message_item);
+                int i=0;
+                while(true)
+                {
+                    QListWidgetItem * item=ui->listOfMembers->item(i);
+                    if(item==nullptr)break;
+                    if(item->text().contains(msg.get_sender_name()))
+                    {
+                        ui->listOfMembers->removeItemWidget(item);
+                        delete item;
+                        item=nullptr;
+                        break;
+                    }
+                    i++;
+                }
+                members.removeOne(con);
+                qDebug()<<members.size();
             }
             else
             {
-                player_one.increse('l');
-                player_two.increse('w');
+                qDebug()<<"unknown message";
             }
 
-
-        }
-        else if(s=='d')
-        {
-            qDebug()<<"we have draw";
-            sendToAllMembers("draw","");
-            player_one.increse('d');
-            player_two.increse('d');
-        }
-        //else // 'n' nothing just continue
-
-
-
-
-
-    }
-    else if(msg.get_type()=="resign")
-    {
-        if(player_one.getUsername()==msg.get_sender_name())
-        {
-            sendToAllMembers("wins",player_two.getUsername());
-        }
-        else
-        {
-            sendToAllMembers("wins",player_one.getUsername());
         }
 
-    }
-    else if(msg.get_type()=="rematch")
-    {
-        if(msg.get_sender_name()==player_one.getUsername())rematch[0]=true;
-        if(msg.get_sender_name()==player_two.getUsername())rematch[1]=true;
-        if(rematch[0]&&rematch[1])
-        {
-            startNewGame();
-        }
-    }
-    else if(msg.get_type()=="disconnected")
-    {
-        qDebug()<<"in dicon";
-        qDebug()<<msg.get_sender_name();
-
-        if(!members.contains(con))return; // not a member
-        qDebug()<<"should display";
-        sendToAllMembers("quit","",msg.get_sender_name());
-        QListWidgetItem * message_item =
-                new QListWidgetItem(">>> "+msg.get_sender_name()
-                                    +" left <<<");
-
-        message_item->setBackground(QBrush(QColor(Qt::GlobalColor::red)));
-        message_item->setTextAlignment(Qt::AlignCenter);
-        ui->chatList->addItem(message_item);
-        qDebug()<<"should3 display";
-        int i=0;
-        while(true)
-        {
-            QListWidgetItem * item=ui->listOfMembers->item(i);
-            if(item==nullptr)break;
-            if(item->text().contains(msg.get_sender_name()))
-            {
-                ui->listOfMembers->removeItemWidget(item);
-                delete item;
-                item=nullptr;
-                break;
-            }
-            i++;
-        }
-        members.removeOne(con);
-        qDebug()<<members.size();
-    }
-    else
-    {
-        qDebug()<<"unknown message";
     }
 }
-
+}
 void ServerGameHandeler::authNewConnections(int i,QString username)
 {
 
