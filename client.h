@@ -52,7 +52,7 @@ private:
 
     bool is_newplayer;
     QTcpSocket * tcp_client;
-    TcpSocketConnection * tcp_connection;
+    TcpSocketConnection * tcp_connection=nullptr;
     QString username;
     QString password;
 

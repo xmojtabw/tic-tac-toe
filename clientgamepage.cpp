@@ -140,7 +140,7 @@ ClientGamePage::~ClientGamePage()
 }
 void ClientGamePage::handelNewEvent(Message msg,TcpSocketConnection * connection)
 {
-    qDebug()<<"event:"<<msg.get_message()<<"sender"<<msg.get_sender_name();
+    qDebug()<<"event:"<<msg.get_message()<<"sender"<<msg.get_sender_name() << msg.get_type();
     if(msg.get_type()=="normalmessage"&&msg.get_sender_name()!=username)
     {
         QListWidgetItem * message_item =

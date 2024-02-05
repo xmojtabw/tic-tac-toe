@@ -55,7 +55,8 @@ Client::~Client()
 {
     delete ui;
     delete lan_page;
-    delete tcp_connection;
+    if(tcp_connection)
+        delete tcp_connection;
 
 }
 
@@ -79,23 +80,10 @@ void Client::on_LanButton_clicked()
 
 void Client::tcpConnected()
 {
-    qDebug()<<"tcp connected";
-//    socket_thread = new QThread;
 
-//    auto p = tcp_client->parent();
-    qDebug()<<"before moving to thread";
-//    p->moveToThread(socket_thread);
-    qDebug()<<"parent moved";
-//    tcp_client->moveToThread(socket_thread);
-    qDebug()<<"tcp moved moved";
     tcp_connection = new TcpSocketConnection(tcp_client,false,username);
     connect(tcp_connection,&TcpSocketConnection::newEvent,
             this,&Client::tcpConfirmation);
-//    connect(socket_thread,&QThread::started,
-//            tcp_connection,&TcpSocketConnection::startManage);
-//    tcp_connection->moveToThread(socket_thread);
-
-//    socket_thread->start();
     if(is_newplayer)
     {
         qDebug()<<"going to send auth";
@@ -122,7 +110,7 @@ void Client::tcpConfirmation(Message msg, TcpSocketConnection *connection)
         }
         else
         {
-            connection->sendMessage("join");//don't need to send info
+            connection->sendMessage("join","",username);//don't need to send info
         }
 
         chat_page = new ClientGamePage(connection,username);

@@ -12,6 +12,7 @@ class Player
 {
 public:
     Player(QString usernsme="not defined",QString password="not defined");
+    Player(QString username, size_t h_pass);
     bool operator==(const Player& other);
     Player(const Player& other);
     Player& operator=(const Player &other);
@@ -19,6 +20,7 @@ public:
     int getWins()const;
     int getDraws()const;
     int getLoses()const;
+    size_t getPass()const;
     void increse(const char& status);//increse total games and win or lose or draw
     //d = draw
     //l = lose

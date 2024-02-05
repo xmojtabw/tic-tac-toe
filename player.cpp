@@ -4,7 +4,13 @@ Player::Player(QString ur,QString ps):
     username(ur),
     wins(0),loses(0),draw(0)
 {
-        password=qHash(ps);
+    password=qHash(ps);
+}
+
+Player::Player(QString u, size_t h_pass):username(u),password(h_pass),
+    wins(0),loses(0),draw(0)
+{
+
 }
 
 bool Player::operator==(const Player &other)
@@ -53,6 +59,11 @@ int Player::getDraws() const
 int Player::getLoses() const
 {
     return loses;
+}
+
+size_t Player::getPass() const
+{
+    return password;
 }
 
 void Player::increse(const char &status)

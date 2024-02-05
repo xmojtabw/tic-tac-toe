@@ -179,7 +179,7 @@ void TcpSocketConnection::dequeueDraftMessages()
 }
 void TcpSocketConnection::startManage()
 {
-    qDebug()<<"start message has been called";
+
 
     connection = new QTcpSocket();
     connection->setSocketDescriptor(socketDescriptor);

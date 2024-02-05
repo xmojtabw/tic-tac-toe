@@ -219,6 +219,7 @@ ServerGameHandeler::~ServerGameHandeler()
 {
 
     alive=false;
+    db.save();
     delete ui;
 
 
@@ -244,7 +245,6 @@ void ServerGameHandeler::handelNewConnection(TcpSocketConnection * nc)
     waiters_lock.lock();
     waiters.append(nc);
     waiters_lock.unlock();
-    qDebug() << "new connection";
 }
 void ServerGameHandeler::handelNewEvent()
 {
@@ -256,7 +256,6 @@ while (alive) {
         QVector<Message> message_to_proccess=con->getMessages();
         for(auto &msg: message_to_proccess)
         {
-
             if(msg.get_type()=="join")
             {
 
@@ -285,12 +284,22 @@ while (alive) {
                         {
                             player_one = Player(msg.get_sender_name(),msg.get_message());
                             db.addPlayer(player_one);
+                            db.save();
                         }
                         if(members.size()==2)
                         {
 
                             player_two = Player(msg.get_sender_name(),msg.get_message());
                             db.addPlayer(player_two);
+                            db.save();
+                            startNewGame();
+                        }
+                    }
+                    else
+                    {
+
+                        if(members.size()==2)
+                        {
                             startNewGame();
                         }
                     }
@@ -425,13 +434,14 @@ void ServerGameHandeler::authNewConnections(int i,QString username)
 {
 
     qDebug()<<"in auth handle"<<i<<username;
-        foreach(const auto& con,waiters )
-        {
-            if(con->getName()==username)
+    foreach(const auto& con,waiters )
+    {
+        if(con->getName()==username)
             {
                 if(i==-1)
                 {
                     con->sendMessage("wrongauth");//wrong pass or username
+                    waiters.removeOne(con);
                 }
                 else if(i ==-2)
                 {
@@ -454,10 +464,7 @@ void ServerGameHandeler::authNewConnections(int i,QString username)
                 break;
             }
 
-        }
-
-
-
+    }
 }
 
 

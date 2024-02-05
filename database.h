@@ -4,6 +4,7 @@
 #include "tcpsocketconnection.h"
 #include <QThread>
 #include <QObject>
+#include <QFile>
 
 class DataBaseWorker:public QObject
 {
@@ -31,11 +32,13 @@ public:
     Player &operator[](const int& i);
     void changeOnePlayer(Player &player);
     void find(QString username,QString pass="");
+    void save();
 private:
 
     DataBaseWorker* worker;
     QThread* workerThread;
     QVector<Player> players;
+    QFile file;
 signals:
     void notify(int index,QString username);
 
